@@ -620,7 +620,7 @@ function get_post_hupai(shoupai: Shoupai, rongpai: string | null | undefined, ba
         const regexp = new RegExp(p[1], 'g');
         for (let m of suitstr) {
             if (m[0] != p[0]) continue;
-            m = m.replace(/0/, '5');
+            m = m.replace(/0/g, '5');
             let nn = m.match(regexp);
             if (nn) n_baopai += nn.length;
         }
@@ -638,7 +638,7 @@ function get_post_hupai(shoupai: Shoupai, rongpai: string | null | undefined, ba
         const regexp = new RegExp(p[1], 'g');
         for (let m of suitstr) {
             if (m[0] != p[0]) continue;
-            m = m.replace(/0/, '5');
+            m = m.replace(/0/g, '5');
             let nn = m.match(regexp);
             if (nn) n_fubaopai += nn.length;
         }
@@ -681,7 +681,7 @@ function get_defen(initialFu: number, hupai: Yaku[], rongpai: string | null | un
             if (oya) {
                 let a = table.oya.tsumo[han][0];
                 for (let l = 0; l < 3; l++) {
-                    if (l == menfeng) fenpei[l] += a + chang * 2000 + lizhi * 1000;
+                    if (l == menfeng) fenpei[l] += a * 2 + chang * 2000 + lizhi * 1000;
                     else fenpei[l] -= a + chang * 1000;
                 }
                 const defen = a * 2;

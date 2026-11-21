@@ -184,8 +184,12 @@ export function tingpai(shoupai: Shoupai, f_xiangting = xiangting) {
             if (s === 'm' && n >= 2 && n <= 8) continue;
             if (bingpai[n] >= 4) continue;
             bingpai[n]++;
-            if (f_xiangting(shoupai) < n_xiangting) pai.push(s + n);
-            bingpai[n]--;
+            try {
+                if (f_xiangting(shoupai) < n_xiangting) pai.push(s + n);
+            }
+            finally {
+                bingpai[n]--;
+            }
         }
     }
     return pai;
