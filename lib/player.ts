@@ -3,22 +3,45 @@
  */
 "use strict";
 
-const Majiang = {
-    Shoupai: require('./shoupai'),
-    He: require('./he'),
-    Game: require('./game'),
-    Board: require('./board'),
-    Util: Object.assign(require('./xiangting'),
-        require('./hule'))
-};
+import Shoupai = require('./shoupai');
+import Board = require('./board');
+import Game = require('./game');
+import rule = require('./rule');
+import Xiangting = require('./xiangting');
 
-module.exports = class Player {
+type Rule = ReturnType<typeof rule>;
+type Opening = Parameters<Board['kaiju']>[0] & { id: number; rule: Rule };
+type Deal = Parameters<Board['qipai']>[0];
+type Draw = Parameters<Board['zimo']>[0];
+type Discard = Parameters<Board['dapai']>[0];
+type Meld = Parameters<Board['fulou']>[0];
+type Dora = Parameters<Board['kaigang']>[0];
+type Win = Parameters<Board['hule']>[0];
+type DrawResult = Parameters<Board['pingju']>[0];
+type End = Parameters<Board['jieju']>[0];
+type Update = { zimo?: Draw; gangzimo?: Draw; dapai?: Discard; fulou?: Meld;
+    gang?: Meld; kaigang?: Dora; hule?: Win; pingju?: DrawResult };
+type Message = Update & { kaiju?: Opening; qipai?: Deal; jieju?: End };
+type Reply = { daopai?: string; hule?: boolean; gang?: string; dapai?: string; fulou?: string };
+type View = { kaiju(id: number): void; redraw(): void; update(event: Update): void; summary(paipu: End): void };
+
+class Player {
+    _model: Board;
+    _id = 0;
+    _rule = rule();
+    _menfeng = 0;
+    _diyizimo = true;
+    _n_gang = 0;
+    _neng_rong = true;
+    _view?: View;
+    _callback?: (reply: Reply) => void;
+    _paipu?: End;
 
     constructor() {
-        this._model = new Majiang.Board();
+        this._model = new Board();
     }
 
-    action(msg, callback) {
+    action(msg: Message, callback?: (reply: Reply) => void) {
 
         this._callback = callback;
 
@@ -37,16 +60,19 @@ module.exports = class Player {
 
     get shoupai() { return this._model.shoupai[this._menfeng] }
     get he() { return this._model.he[this._menfeng] }
-    get shan() { return this._model.shan }
+    get shan() {
+        if (!this._model.shan) throw new Error('No hand has been dealt');
+        return this._model.shan;
+    }
     get hulepai() {
-        return Majiang.Util.xiangting(this.shoupai) == 0
-            && Majiang.Util.tingpai(this.shoupai)
+        return Xiangting.xiangting(this.shoupai) == 0
+            && Xiangting.tingpai(this.shoupai)
             || [];
     }
     get model() { return this._model }
-    set view(view) { this._view = view }
+    set view(view: View | undefined) { this._view = view }
 
-    kaiju(kaiju) {
+    kaiju(kaiju: Opening) {
         this._id = kaiju.id;
         this._rule = kaiju.rule;
         this._model.kaiju(kaiju);
@@ -55,7 +81,7 @@ module.exports = class Player {
         if (this._callback) this.action_kaiju(kaiju);
     }
 
-    qipai(qipai) {
+    qipai(qipai: Deal) {
         this._model.qipai(qipai);
         const model = this._model;
         this._menfeng = (this._id + 3 - model.qijia + 3 - model.jushu) % 3;
@@ -67,7 +93,7 @@ module.exports = class Player {
         if (this._callback) this.action_qipai(qipai);
     }
 
-    zimo(zimo, gangzimo) {
+    zimo(zimo: Draw, gangzimo = false) {
         this._model.zimo(zimo);
         if (gangzimo) this._n_gang++;
         if (this._view) {
@@ -78,7 +104,7 @@ module.exports = class Player {
         if (this._callback) this.action_zimo(zimo, gangzimo);
     }
 
-    dapai(dapai) {
+    dapai(dapai: Discard) {
 
         if (dapai.l == this._menfeng) {
             if (!this.shoupai.lizhi) this._neng_rong = true;
@@ -99,7 +125,7 @@ module.exports = class Player {
         }
     }
 
-    fulou(fulou) {
+    fulou(fulou: Meld) {
         this._model.fulou(fulou);
         if (this._view) this._view.update({ fulou: fulou });
 
@@ -108,7 +134,7 @@ module.exports = class Player {
         this._diyizimo = false;
     }
 
-    gang(gang) {
+    gang(gang: Meld) {
         this._model.gang(gang);
         if (this._view) this._view.update({ gang: gang });
 
@@ -121,62 +147,76 @@ module.exports = class Player {
         }
     }
 
-    kaigang(kaigang) {
+    kaigang(kaigang: Dora) {
         this._model.kaigang(kaigang);
         if (this._view) this._view.update({ kaigang: kaigang });
     }
 
-    hule(hule) {
+    hule(hule: Win) {
         this._model.hule(hule);
         if (this._view) this._view.update({ hule: hule });
         if (this._callback) this.action_hule(hule);
     }
 
-    pingju(pingju) {
+    pingju(pingju: DrawResult) {
         this._model.pingju(pingju);
         if (this._view) this._view.update({ pingju: pingju });
         if (this._callback) this.action_pingju(pingju);
     }
 
-    jieju(paipu) {
+    jieju(paipu: End) {
         this._model.jieju(paipu);
         this._paipu = paipu;
         if (this._view) this._view.summary(paipu);
         if (this._callback) this.action_jieju(paipu);
     }
 
-    get_dapai(shoupai) {
-        return Majiang.Game.get_dapai(this._rule, shoupai);
+    get_dapai(shoupai: Shoupai) {
+        return Game.get_dapai(this._rule, shoupai);
     }
-    get_chi_mianzi(shoupai, p) {
-        return Majiang.Game.get_chi_mianzi(this._rule, shoupai, p,
+    get_chi_mianzi(shoupai: Shoupai, p: string) {
+        return Game.get_chi_mianzi(this._rule, shoupai, p,
             this.shan.paishu);
     }
-    get_peng_mianzi(shoupai, p) {
-        return Majiang.Game.get_peng_mianzi(this._rule, shoupai, p,
+    get_peng_mianzi(shoupai: Shoupai, p: string) {
+        return Game.get_peng_mianzi(this._rule, shoupai, p,
             this.shan.paishu);
     }
-    get_gang_mianzi(shoupai, p) {
-        return Majiang.Game.get_gang_mianzi(this._rule, shoupai, p,
+    get_gang_mianzi(shoupai: Shoupai, p?: string) {
+        return Game.get_gang_mianzi(this._rule, shoupai, p,
             this.shan.paishu, this._n_gang);
     }
-    allow_lizhi(shoupai, p) {
-        return Majiang.Game.allow_lizhi(this._rule, shoupai, p,
+    allow_lizhi(shoupai: Shoupai, p: string | null) {
+        return Game.allow_lizhi(this._rule, shoupai, p,
             this.shan.paishu,
             this._model.defen[this._id]);
     }
-    allow_hule(shoupai, p, hupai) {
+    allow_hule(shoupai: Shoupai, p: string | null, hupai = false) {
         hupai = hupai || shoupai.lizhi || this.shan.paishu == 0;
-        return Majiang.Game.allow_hule(this._rule, shoupai, p,
+        return Game.allow_hule(this._rule, shoupai, p,
             this._model.zhuangfeng, this._menfeng,
             hupai, this._neng_rong);
     }
-    allow_pingju(shoupai) {
-        return Majiang.Game.allow_pingju(this._rule, shoupai,
+    allow_pingju(shoupai: Shoupai) {
+        return Game.allow_pingju(this._rule, shoupai,
             this._diyizimo);
     }
-    allow_no_daopai(shoupai) {
-        return Majiang.Game.allow_no_daopai(this._rule, shoupai,
+    allow_no_daopai(shoupai: Shoupai) {
+        return Game.allow_no_daopai(this._rule, shoupai,
             this.shan.paishu);
     }
 }
+
+interface Player {
+    action_kaiju(event: Opening): void;
+    action_qipai(event: Deal): void;
+    action_zimo(event: Draw, replacement: boolean): void;
+    action_dapai(event: Discard): void;
+    action_fulou(event: Meld): void;
+    action_gang(event: Meld): void;
+    action_hule(event: Win): void;
+    action_pingju(event: DrawResult): void;
+    action_jieju(event: End): void;
+}
+
+export = Player;

@@ -1,9 +1,12 @@
 /*
  *  Majiang.Util.xiangting
  */
-"use strict";
+import Shoupai = require('./shoupai');
 
-function _xiangting(m, d, g, j) {
+type ShapeCounts = [melds: number, partials: number, isolated: number];
+type ShapeCandidates = { a: ShapeCounts; b: ShapeCounts };
+
+function _xiangting(m: number, d: number, g: number, j: boolean) {
 
     let n = j ? 4 : 5;
     if (m > 4) { d += m - 4; m = 4 }
@@ -13,7 +16,7 @@ function _xiangting(m, d, g, j) {
     return 13 - m * 3 - d * 2 - g;
 }
 
-function dazi(bingpai) {
+function dazi(bingpai: number[]): ShapeCandidates {
 
     let n_pai = 0, n_dazi = 0, n_guli = 0;
 
@@ -34,7 +37,7 @@ function dazi(bingpai) {
     };
 }
 
-function mianzi(bingpai, n = 1) {
+function mianzi(bingpai: number[], n = 1): ShapeCandidates {
 
     if (n > 9) return dazi(bingpai);
 
@@ -65,7 +68,7 @@ function mianzi(bingpai, n = 1) {
     return max;
 }
 
-function mianzi_all(shoupai, jiangpai) {
+function mianzi_all(shoupai: Shoupai, jiangpai = false) {
 
     let r = {
         m: mianzi(shoupai._bingpai.m),
@@ -100,11 +103,11 @@ function mianzi_all(shoupai, jiangpai) {
     return min;
 }
 
-function xiangting_yiban(shoupai) {
+export function xiangting_yiban(shoupai: Shoupai) {
 
     let min = mianzi_all(shoupai);
 
-    for (let s of ['m', 'p', 's', 'z']) {
+    for (let s of ['m', 'p', 's', 'z'] as const) {
         let bingpai = shoupai._bingpai[s];
         for (let n = 1; n < bingpai.length; n++) {
             if (bingpai[n] >= 2) {
@@ -120,14 +123,14 @@ function xiangting_yiban(shoupai) {
     return min;
 }
 
-function xiangting_guoshi(shoupai) {
+export function xiangting_guoshi(shoupai: Shoupai) {
 
     if (shoupai._fulou.length) return Infinity;
 
     let n_yaojiu = 0;
     let n_duizi = 0;
 
-    for (let s of ['m', 'p', 's', 'z']) {
+    for (let s of ['m', 'p', 's', 'z'] as const) {
         let bingpai = shoupai._bingpai[s];
         let nn = (s == 'z') ? [1, 2, 3, 4, 5, 6, 7] : [1, 9];
         for (let n of nn) {
@@ -139,14 +142,14 @@ function xiangting_guoshi(shoupai) {
     return n_duizi ? 12 - n_yaojiu : 13 - n_yaojiu;
 }
 
-function xiangting_qidui(shoupai) {
+export function xiangting_qidui(shoupai: Shoupai) {
 
     if (shoupai._fulou.length) return Infinity;
 
     let n_duizi = 0;
     let n_guli = 0;
 
-    for (let s of ['m', 'p', 's', 'z']) {
+    for (let s of ['m', 'p', 's', 'z'] as const) {
         let bingpai = shoupai._bingpai[s];
         for (let n = 1; n < bingpai.length; n++) {
             if (bingpai[n] >= 2) n_duizi++;
@@ -160,7 +163,7 @@ function xiangting_qidui(shoupai) {
     return 13 - n_duizi * 2 - n_guli;
 }
 
-function xiangting(shoupai) {
+export function xiangting(shoupai: Shoupai) {
     return Math.min(
         xiangting_yiban(shoupai),
         xiangting_guoshi(shoupai),
@@ -168,30 +171,27 @@ function xiangting(shoupai) {
     );
 }
 
-function tingpai(shoupai, f_xiangting = xiangting) {
+export function tingpai(shoupai: Shoupai, f_xiangting = xiangting) {
 
     if (shoupai._zimo) return null;
 
     let pai = [];
     let n_xiangting = f_xiangting(shoupai);
-    for (let s of ['m', 'p', 's', 'z']) {
+    for (let s of ['m', 'p', 's', 'z'] as const) {
         let bingpai = shoupai._bingpai[s];
         for (let n = 1; n < bingpai.length; n++) {
             // 三人麻雀: 萬子の2-8は対象外
             if (s === 'm' && n >= 2 && n <= 8) continue;
             if (bingpai[n] >= 4) continue;
             bingpai[n]++;
-            if (f_xiangting(shoupai) < n_xiangting) pai.push(s + n);
-            bingpai[n]--;
+            try {
+                if (f_xiangting(shoupai) < n_xiangting) pai.push(s + n);
+            }
+            finally {
+                bingpai[n]--;
+            }
         }
     }
     return pai;
 }
 
-module.exports = {
-    xiangting_guoshi: xiangting_guoshi,
-    xiangting_qidui: xiangting_qidui,
-    xiangting_yiban: xiangting_yiban,
-    xiangting: xiangting,
-    tingpai: tingpai
-}

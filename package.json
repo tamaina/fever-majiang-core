@@ -1,18 +1,23 @@
 {
-  "name": "@kobalab/majiang-core",
-  "version": "1.3.4",
-  "description": "麻雀基本ライブラリ",
+  "name": "@aqz/fever-majiang-core",
+  "version": "1.0.0",
+  "description": "Fever Mahjong three-player game engine (fork of kobalab/majiang-core)",
   "publishConfig": {
     "access": "public"
   },
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "mocha -u tdd",
-    "test:cover": "nyc -r lcov -r text npm test"
+    "test": "npm run build && npm run test:types && vitest run",
+    "test:legacy": "mocha -u tdd --extension js",
+    "test:legacy:cover": "nyc -r lcov -r text npm run test:legacy",
+    "build": "node -e \"require('node:fs').rmSync('dist',{ recursive: true, force: true })\" && tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:types": "tsc --noEmit --strict --module Node16 --target ES2022 test/types-smoke.cts",
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kobalab/majiang-core.git"
+    "url": "git+https://github.com/tamaina/fever-majiang-core.git"
   },
   "keywords": [
     "麻雀",
@@ -21,11 +26,34 @@
   "author": "Satoshi Kobayashi",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kobalab/majiang-core/issues"
+    "url": "https://github.com/tamaina/fever-majiang-core/issues"
   },
-  "homepage": "https://github.com/kobalab/majiang-core#readme",
+  "homepage": "https://github.com/tamaina/fever-majiang-core#readme",
   "devDependencies": {
     "mocha": "^11.7.1",
-    "nyc": "^17.1.0"
+    "nyc": "^17.1.0",
+    "typescript": "5.9.3",
+    "vitest": "5.1.1"
+  },
+  "files": [
+    "dist"
+  ],
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./three-player": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./four-player": {
+      "types": "./dist/four-player.d.ts",
+      "default": "./dist/four-player.js"
+    }
+  },
+  "dependencies": {
+    "@kobalab/majiang-core": "1.4.1"
   }
 }

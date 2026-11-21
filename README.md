@@ -1,20 +1,37 @@
-# majiang-core
+# Fever Mahjong Core
 
-麻雀基本ライブラリ
+[ntanetani/fever-majiang-core](https://github.com/ntanetani/fever-majiang-core) の
+メンテナンス用フォークです。元の実装は
+[kobalab/majiang-core](https://github.com/kobalab/majiang-core)（Satoshi Kobayashi）です。
 
-手牌の操作、シャンテン数・和了点計算、局進行・卓情報の管理、思考ルーチンの雛形を含む基本クラス群を提供します。
+三人用の牌山・局進行・和了点計算を提供する CommonJS ライブラリです。
+対局サーバーや通信層は含みません。
+Fever 麻将由来のルールであり、北抜きを含む天鳳・雀魂の三麻ルールとの
+互換性はありません。四人用は別入口から、既存の上流エンジンをそのまま使います。
 
-ver.2.0.0 以降の[電脳麻将](https://github.com/kobalab/Majiang)は、その実装に本パッケージを使用しています。
+## インストール（公開後）
 
-## インストール
+TypeScript ソースから生成した CommonJS と型宣言を公開します。Node.js 22・24 を CI で検証します。
+
 ```sh
-$ npm i @kobalab/majiang-core
+npm install @aqz/fever-majiang-core
 ```
 
-## 使用法
-```javascript
-const Majiang = require('@kobalab/majiang-core');
+```js
+const threePlayer = require('@aqz/fever-majiang-core/three-player');
+const fourPlayer = require('@aqz/fever-majiang-core/four-player');
+// require('@aqz/fever-majiang-core') is the same as threePlayer.
 ```
+
+四麻入口は MIT の [@kobalab/majiang-core 1.4.1](https://github.com/kobalab/majiang-core/tree/7e964296dd8eb5ff5a32f8182acdc6a0c2a81cbb) に固定した薄いラッパーです。四麻のルールは変更せず、型宣言は検証した公開 API の一部を提供します。
+
+## テスト
+
+- `npm ci && npm test`: TypeScript のビルド、型定義の利用テスト、三麻の回帰テスト。
+- `npm run typecheck`: 移行済み TypeScript ソースの厳密な型チェック。
+- 公開 API の型は TypeScript ソースから生成します。
+- `npm ci && npm run build && npm run test:legacy`: 引き継いだテスト一式。四人用の局進行・牌山・
+  点数などを期待するケースが残っており、三麻版では一部が失敗します。
 
 ## 提供機能
 | クラス名            | 機能                                 |

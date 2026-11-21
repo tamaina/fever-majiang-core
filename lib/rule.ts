@@ -3,7 +3,12 @@
  */
 "use strict";
 
-module.exports = function (param = {}) {
+type Scores = {
+    oya: { ron: Record<number, number>; tsumo: Record<number, readonly [number, ...number[]]> };
+    ko: { ron: Record<number, number>; tsumo: Record<number, readonly [number, number]> };
+};
+
+function defaults() {
 
     let rule = {
         /* 点数関連 */
@@ -52,14 +57,18 @@ module.exports = function (param = {}) {
 
         /* 三人麻雀: 符計算なし・1000点単位の簡易スコアを使う場合 */
         '3p簡易スコア使用': true,
-        '3p簡易スコア表': null,
+        '3p簡易スコア表': null as Scores | null,
         '流し満貫は役満扱い': true,
         'ノーテン罰符': 1000,
     };
 
-    for (let key of Object.keys(param)) {
-        rule[key] = param[key];
-    }
-
     return rule;
 }
+
+type Rule = ReturnType<typeof defaults>;
+
+function createRule(param: Partial<Rule> = {}): Rule {
+    return { ...defaults(), ...param };
+}
+
+export = createRule;
