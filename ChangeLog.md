@@ -1,4 +1,4 @@
-### v0.1.0 / @aqz/fever-majiang-core
+### v1.0.0 / @aqz/fever-majiang-core
 
   - Fever 麻将由来の三人用エンジンを strict TypeScript に移行。CommonJS と型宣言を生成。
   - 萬子のドラ、点棒収支、牌姿の赤五・枚数計算、三席の局面再生を修正。

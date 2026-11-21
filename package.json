@@ -1,6 +1,6 @@
 {
   "name": "@aqz/fever-majiang-core",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Fever Mahjong three-player game engine (fork of kobalab/majiang-core)",
   "publishConfig": {
     "access": "public"
@@ -38,7 +38,6 @@
   "files": [
     "dist"
   ],
-  "private": true,
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
