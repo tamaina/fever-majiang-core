@@ -3,28 +3,63 @@
  */
 "use strict";
 
-const Majiang = {
-    Shoupai: require('./shoupai'),
-    He:      require('./he')
-};
+import Shoupai = require('./shoupai');
+import He = require('./he');
+
+type Opening = { title: string; player: string[]; qijia: number };
+type Deal = { zhuangfeng: number; jushu: number; changbang: number; lizhibang: number;
+    baopai?: string | string[] | null; shoupai: string[]; defen: number[] };
+type Draw = { l: number; p?: string | null };
+type Discard = { l: number; p: string };
+type Meld = { l: number; m: string };
+type Dora = { baopai: string };
+type Win = { l: number; baojia?: number | null; shoupai: string;
+    fubaopai?: string[] | null; fenpei: number[] };
+type DrawResult = { name: string; shoupai: string[]; fenpei?: number[] | null };
+type End = { defen: number[] };
 
 class Shan {
-    constructor(baopai) {
-        this.paishu = 136 - 13 * 4 - 14;
-        this.baopai = [].concat(baopai||[]);
-        this.fubaopai;
+    paishu = 136 - 13 * 4 - 14;
+    baopai: string[];
+    fubaopai: string[] | null | undefined;
+    constructor(baopai?: string | string[] | null) {
+        this.baopai = typeof baopai === 'string' ? [baopai] : (baopai ?? []).slice();
     }
-    zimo(p)         { this.paishu--; return p || '_' }
-    kaigang(baopai) { this.baopai.push(baopai);      }
+    zimo(p?: string | null) { this.paishu--; return p || '_'; }
+    kaigang(baopai: string) { this.baopai.push(baopai); }
 }
 
-module.exports = class Board {
+class Board {
+    title = '';
+    player: string[] = [];
+    qijia = 0;
+    zhuangfeng = 0;
+    jushu = 0;
+    changbang = 0;
+    lizhibang = 0;
+    defen: number[] = [];
+    shan: Shan | null = null;
+    shoupai: Shoupai[] = [];
+    he: He[] = [];
+    player_id: number[] = [];
+    lunban = -1;
 
-    constructor(kaiju) {
+    _lizhi = false;
+    _fenpei: number[] | null = null;
+    _lianzhuang = false;
+    _changbang = 0;
+    _lizhibang = 0;
+
+    private activeWall(): Shan {
+        if (!this.shan) throw new Error('No hand has been dealt');
+        return this.shan;
+    }
+
+    constructor(kaiju?: Opening) {
         if (kaiju) this.kaiju(kaiju);
     }
 
-    kaiju(kaiju) {
+    kaiju(kaiju: Opening) {
 
         this.title  = kaiju.title;
         this.player = kaiju.player;
@@ -41,18 +76,18 @@ module.exports = class Board {
         this.player_id  = [0,1,2,3];
         this.lunban     = -1;
 
-        this._lizhi;
-        this._fenpei;
-        this._lianzhuang;
-        this._changbang;
-        this._lizhibang;
+        this._lizhi = false;
+        this._fenpei = null;
+        this._lianzhuang = false;
+        this._changbang = 0;
+        this._lizhibang = 0;
     }
 
-    menfeng(id) {
+    menfeng(id: number) {
         return (id + 4 - this.qijia + 4 - this.jushu) % 4;
     }
 
-    qipai(qipai) {
+    qipai(qipai: Deal) {
         this.zhuangfeng = qipai.zhuangfeng;
         this.jushu      = qipai.jushu;
         this.changbang  = qipai.changbang;
@@ -60,8 +95,8 @@ module.exports = class Board {
         this.shan       = new Shan(qipai.baopai);
         for (let l = 0; l < 4; l++) {
             let paistr = qipai.shoupai[l] || '_'.repeat(13);
-            this.shoupai[l] = Majiang.Shoupai.fromString(paistr);
-            this.he[l]      = new Majiang.He();
+            this.shoupai[l] = Shoupai.fromString(paistr);
+            this.he[l]      = new He();
             this.player_id[l] = (this.qijia + this.jushu + l) % 4;
             this.defen[this.player_id[l]] = qipai.defen[l];
         }
@@ -81,39 +116,43 @@ module.exports = class Board {
         }
     }
 
-    zimo(zimo) {
+    zimo(zimo: Draw) {
         this.lizhi();
         this.lunban = zimo.l;
-        this.shoupai[zimo.l].zimo(this.shan.zimo(zimo.p), false);
+        this.shoupai[zimo.l].zimo(this.activeWall().zimo(zimo.p), false);
     }
 
-    dapai(dapai) {
+    dapai(dapai: Discard) {
         this.lunban = dapai.l;
         this.shoupai[dapai.l].dapai(dapai.p, false);
         this.he[dapai.l].dapai(dapai.p);
         this._lizhi = dapai.p.slice(-1) == '*';
     }
 
-    fulou(fulou) {
+    fulou(fulou: Meld) {
         this.lizhi();
         this.he[this.lunban].fulou(fulou.m);
         this.lunban = fulou.l;
         this.shoupai[fulou.l].fulou(fulou.m, false);
     }
 
-    gang(gang) {
+    gang(gang: Meld) {
         this.lunban = gang.l;
         this.shoupai[gang.l].gang(gang.m, false);
     }
 
-    kaigang(kaigang) {
-        this.shan.kaigang(kaigang.baopai);
+    kaigang(kaigang: Dora) {
+        this.activeWall().kaigang(kaigang.baopai);
     }
 
-    hule(hule) {
+    hule(hule: Win) {
         let shoupai = this.shoupai[hule.l];
         shoupai.fromString(hule.shoupai);
-        if (hule.baojia != null) shoupai.dapai(shoupai.get_dapai().pop());
+        if (hule.baojia != null) {
+            const winningTile = shoupai.get_dapai()?.pop();
+            if (!winningTile) throw new Error('Ron result has no winning tile');
+            shoupai.dapai(winningTile);
+        }
         if (this._fenpei) {
             this.changbang = 0;
             this.lizhibang = 0;
@@ -121,19 +160,19 @@ module.exports = class Board {
                 this.defen[this.player_id[l]] += this._fenpei[l];
             }
         }
-        this.shan.fubaopai = hule.fubaopai;
+        this.activeWall().fubaopai = hule.fubaopai;
         this._fenpei = hule.fenpei;
         this._lizhibang = 0;
         if (hule.l == 0) this._lianzhuang = true;
     }
 
-    pingju(pingju) {
+    pingju(pingju: DrawResult) {
         if (! pingju.name.match(/^三家和/)) this.lizhi();
         for (let l = 0; l < 4; l++) {
             if (pingju.shoupai[l])
                 this.shoupai[l].fromString(pingju.shoupai[l]);
         }
-        this._fenpei = pingju.fenpei;
+        this._fenpei = pingju.fenpei ?? null;
         this._lizhibang = this.lizhibang;
         this._lianzhuang = true;
     }
@@ -147,10 +186,12 @@ module.exports = class Board {
         }
     }
 
-    jieju(paipu) {
+    jieju(paipu: End) {
         for (let id = 0; id < 4; id++) {
             this.defen[id] = paipu.defen[id];
         }
         this.lunban = -1;
     }
 }
+
+export = Board;

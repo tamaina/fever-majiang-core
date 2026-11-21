@@ -3,9 +3,23 @@
  */
 "use strict";
 
-module.exports = class Shoupai {
+const suits = ['m', 'p', 's', 'z'] as const;
+type Suit = typeof suits[number];
+type Counts = Record<Suit, number[]> & { _: number };
 
-    static valid_pai(p) {
+function tileSuit(value: string): Suit {
+    const suit = suits.find(s => s === value[0]);
+    if (suit === undefined) throw new Error(value);
+    return suit;
+}
+
+class Shoupai {
+    _bingpai: Counts;
+    _fulou: string[];
+    _zimo: string | null;
+    _lizhi: boolean;
+
+    static valid_pai(p: string): string | null {
         // 基本の牌パターンチェック
         if (!p.match(/^(?:[mps]\d|z[1-7])_?\*?[\+\=\-]?$/)) return null;
 
@@ -16,7 +30,7 @@ module.exports = class Shoupai {
         return p;
     }
 
-    static valid_mianzi(m) {
+    static valid_mianzi(m: string): string | undefined {
 
         if (m.match(/^z.*[089]/)) return;
         let h = m.replace(/0/g, '5');
@@ -24,20 +38,20 @@ module.exports = class Shoupai {
             return m.replace(/([mps])05/, '$1' + '50');
         }
         else if (h.match(/^[mpsz](\d)\1\1\1[\+\=\-]?$/)) {
-            return m[0] + m.match(/\d(?![\+\=\-])/g).sort().reverse().join('')
+            return m[0] + (m.match(/\d(?![\+\=\-])/g) ?? []).sort().reverse().join('')
                 + (m.match(/\d[\+\=\-]$/) || [''])[0];
         }
         else if (h.match(/^[mps]\d+\-\d*$/)) {
             let hongpai = m.match(/0/);
-            let nn = h.match(/\d/g).sort();
+            let nn = (h.match(/\d/g) ?? []).sort();
             if (nn.length != 3) return;
             if (+nn[0] + 1 != +nn[1] || +nn[1] + 1 != +nn[2]) return;
-            h = h[0] + h.match(/\d[\+\=\-]?/g).sort().join('');
+            h = h[0] + (h.match(/\d[\+\=\-]?/g) ?? []).sort().join('');
             return hongpai ? h.replace(/5/, '0') : h;
         }
     }
 
-    constructor(qipai = []) {
+    constructor(qipai: string[] = []) {
 
         this._bingpai = {
             _: 0,
@@ -55,9 +69,9 @@ module.exports = class Shoupai {
                 this._bingpai._++;
                 continue;
             }
-            if (!(p = Shoupai.valid_pai(p))) throw new Error(p);
-            let s = p[0], n = +p[1];
-            if (this._bingpai[s][n] == 4) throw new Error([this, p]);
+            if (!Shoupai.valid_pai(p)) throw new Error(p);
+            let s = tileSuit(p), n = +p[1];
+            if (this._bingpai[s][n] == 4) throw new Error([this, p].join(','));
             this._bingpai[s][n]++;
             if (s != 'z' && n == 0) this._bingpai[s][5]++;
         }
@@ -66,13 +80,13 @@ module.exports = class Shoupai {
     static fromString(paistr = '') {
 
         let fulou = paistr.split(',');
-        let bingpai = fulou.shift();
+        let bingpai = fulou.shift() ?? '';
 
-        let qipai = bingpai.match(/^_*/)[0].match(/_/g) || [];
+        let qipai: string[] = bingpai.match(/^_*/)?.[0].match(/_/g) || [];
         for (let suitstr of bingpai.match(/[mpsz]\d+_*/g) || []) {
             let s = suitstr[0];
-            for (let n of suitstr.match(/\d/g)) {
-                if (s == 'z' && (n < 1 || 7 < n)) continue;
+            for (let n of suitstr.match(/\d/g) ?? []) {
+                if (s == 'z' && (+n < 1 || 7 < +n)) continue;
                 qipai.push(s + n);
             }
             qipai = qipai.concat(suitstr.match(/_/g) || []);
@@ -81,13 +95,13 @@ module.exports = class Shoupai {
         let zimo = (qipai.length - 2) % 3 == 0 && qipai.slice(-1)[0];
         const shoupai = new Shoupai(qipai);
 
-        let last;
+        let last: string | null = null;
         for (let m of fulou) {
             if (!m) { shoupai._zimo = last; break }
-            m = Shoupai.valid_mianzi(m);
-            if (m) {
-                shoupai._fulou.push(m);
-                last = m;
+            const canonical = Shoupai.valid_mianzi(m);
+            if (canonical) {
+                shoupai._fulou.push(canonical);
+                last = canonical;
             }
         }
 
@@ -101,8 +115,8 @@ module.exports = class Shoupai {
 
         let paistr = '';
 
-        for (let s of ['m', 'p', 's', 'z']) {
-            let suitstr = s;
+        for (const s of suits) {
+            let suitstr: string = s;
             let bingpai = this._bingpai[s];
             let n_hongpai = s == 'z' ? 0 : bingpai[0];
             for (let n = 1; n < bingpai.length; n++) {
@@ -148,7 +162,7 @@ module.exports = class Shoupai {
         return shoupai;
     }
 
-    fromString(paistr) {
+    fromString(paistr: string) {
         const shoupai = Shoupai.fromString(paistr);
         this._bingpai = {
             _: shoupai._bingpai._,
@@ -164,10 +178,11 @@ module.exports = class Shoupai {
         return this;
     }
 
-    decrease(s, n) {
+    decrease(s: Suit, rank: number | string) {
+        const n = Number(rank);
         let bingpai = this._bingpai[s];
         if (bingpai[n] == 0 || n == 5 && bingpai[0] == bingpai[5]) {
-            if (this._bingpai._ == 0) throw new Error([this, s + n]);
+            if (this._bingpai._ == 0) throw new Error([this, s + n].join(','));
             this._bingpai._--;
         }
         else {
@@ -176,20 +191,20 @@ module.exports = class Shoupai {
         }
     }
 
-    zimo(p, check = true) {
-        if (check && this._zimo) throw new Error([this, p]);
+    zimo(p: string, check = true) {
+        if (check && this._zimo) throw new Error([this, p].join(','));
         if (p == '_') {
             this._bingpai._++;
             this._zimo = p;
         }
         else {
             if (!Shoupai.valid_pai(p)) throw new Error(p);
-            let s = p[0], n = +p[1];
+            let s = tileSuit(p), n = +p[1];
             let bingpai = this._bingpai[s];
-            if (bingpai[n] == 4) throw new Error([this, p]);
+            if (bingpai[n] == 4) throw new Error([this, p].join(','));
             bingpai[n]++;
             if (n == 0) {
-                if (bingpai[5] == 4) throw new Error([this, p]);
+                if (bingpai[5] == 4) throw new Error([this, p].join(','));
                 bingpai[5]++;
             }
             this._zimo = s + n;
@@ -197,23 +212,23 @@ module.exports = class Shoupai {
         return this;
     }
 
-    dapai(p, check = true) {
-        if (check && !this._zimo) throw new Error([this, p]);
+    dapai(p: string, check = true) {
+        if (check && !this._zimo) throw new Error([this, p].join(','));
         if (!Shoupai.valid_pai(p)) throw new Error(p);
-        let s = p[0], n = +p[1];
+        let s = tileSuit(p), n = +p[1];
         this.decrease(s, n);
         this._zimo = null;
         if (p.slice(-1) == '*') this._lizhi = true;
         return this;
     }
 
-    fulou(m, check = true) {
-        if (check && this._zimo) throw new Error([this, m]);
+    fulou(m: string, check = true) {
+        if (check && this._zimo) throw new Error([this, m].join(','));
         if (m != Shoupai.valid_mianzi(m)) throw new Error(m);
-        if (m.match(/\d{4}$/)) throw new Error([this, m]);
-        if (m.match(/\d{3}[\+\=\-]\d$/)) throw new Error([this, m]);
-        let s = m[0];
-        for (let n of m.match(/\d(?![\+\=\-])/g)) {
+        if (m.match(/\d{4}$/)) throw new Error([this, m].join(','));
+        if (m.match(/\d{3}[\+\=\-]\d$/)) throw new Error([this, m].join(','));
+        let s = tileSuit(m);
+        for (let n of m.match(/\d(?![\+\=\-])/g) ?? []) {
             this.decrease(s, n);
         }
         this._fulou.push(m);
@@ -221,13 +236,13 @@ module.exports = class Shoupai {
         return this;
     }
 
-    gang(m, check = true) {
-        if (check && !this._zimo) throw new Error([this, m]);
-        if (check && this._zimo.length > 2) throw new Error([this, m]);
+    gang(m: string, check = true) {
+        if (check && !this._zimo) throw new Error([this, m].join(','));
+        if (check && this._zimo && this._zimo.length > 2) throw new Error([this, m].join(','));
         if (m != Shoupai.valid_mianzi(m)) throw new Error(m);
-        let s = m[0];
+        let s = tileSuit(m);
         if (m.match(/\d{4}$/)) {
-            for (let n of m.match(/\d/g)) {
+            for (let n of m.match(/\d/g) ?? []) {
                 this.decrease(s, n);
             }
             this._fulou.push(m);
@@ -235,11 +250,11 @@ module.exports = class Shoupai {
         else if (m.match(/\d{3}[\+\=\-]\d$/)) {
             let m1 = m.slice(0, 5);
             let i = this._fulou.findIndex(m2 => m1 == m2);
-            if (i < 0) throw new Error([this, m]);
+            if (i < 0) throw new Error([this, m].join(','));
             this._fulou[i] = m;
             this.decrease(s, m.slice(-1));
         }
-        else throw new Error([this, m]);
+        else throw new Error([this, m].join(','));
         this._zimo = null;
         return this;
     }
@@ -254,11 +269,11 @@ module.exports = class Shoupai {
 
         if (!this._zimo) return null;
 
-        let deny = {};
-        if (check && this._zimo.length > 2) {
+        let deny: Partial<Record<string, true>> = {};
+        if (check && this._zimo && this._zimo.length > 2) {
             let m = this._zimo;
-            let s = m[0];
-            let n = + m.match(/\d(?=[\+\=\-])/) || 5;
+            let s = tileSuit(m);
+            let n = + (m.match(/\d(?=[\+\=\-])/)?.[0] ?? 0) || 5;
             deny[s + n] = true;
             if (!m.replace(/0/, '5').match(/^[mpsz](\d)\1\1/)) {
                 if (n < 7 && m.match(/^[mps]\d\-\d\d$/)) deny[s + (n + 3)] = true;
@@ -268,7 +283,7 @@ module.exports = class Shoupai {
 
         let dapai = [];
         if (!this._lizhi) {
-            for (let s of ['m', 'p', 's', 'z']) {
+            for (const s of suits) {
                 let bingpai = this._bingpai[s];
                 for (let n = 1; n < bingpai.length; n++) {
                     if (bingpai[n] == 0) continue;
@@ -288,13 +303,13 @@ module.exports = class Shoupai {
         return dapai;
     }
 
-    get_chi_mianzi(p, check = true) {
+    get_chi_mianzi(p: string, check = true) {
 
         if (this._zimo) return null;
         if (!Shoupai.valid_pai(p)) throw new Error(p);
 
-        let mianzi = [];
-        let s = p[0], n = + p[1] || 5, d = p.match(/[\+\=\-]$/);
+        let mianzi: string[] = [];
+        let s = tileSuit(p), n = + p[1] || 5, d = p.match(/[\+\=\-]$/)?.[0];
         if (!d) throw new Error(p);
         if (s == 'z' || d != '-') return mianzi;
         if (this._lizhi) return mianzi;
@@ -331,13 +346,13 @@ module.exports = class Shoupai {
         return mianzi;
     }
 
-    get_peng_mianzi(p) {
+    get_peng_mianzi(p: string) {
 
         if (this._zimo) return null;
         if (!Shoupai.valid_pai(p)) throw new Error(p);
 
-        let mianzi = [];
-        let s = p[0], n = + p[1] || 5, d = p.match(/[\+\=\-]$/);
+        let mianzi: string[] = [];
+        let s = tileSuit(p), n = + p[1] || 5, d = p.match(/[\+\=\-]$/)?.[0];
         // 方向指定がない場合は例外ではなく不成立扱いにする
         if (!d) return mianzi;
         if (this._lizhi) return mianzi;
@@ -357,14 +372,14 @@ module.exports = class Shoupai {
         return mianzi;
     }
 
-    get_gang_mianzi(p) {
+    get_gang_mianzi(p?: string | null) {
 
-        let mianzi = [];
+        let mianzi: string[] = [];
         if (p) {
             if (this._zimo) return null;
             if (!Shoupai.valid_pai(p)) throw new Error(p);
 
-            let s = p[0], n = + p[1] || 5, d = p.match(/[\+\=\-]$/);
+            let s = tileSuit(p), n = + p[1] || 5, d = p.match(/[\+\=\-]$/)?.[0];
             if (!d) throw new Error(p);
             if (this._lizhi) return mianzi;
 
@@ -383,7 +398,7 @@ module.exports = class Shoupai {
             if (this._zimo.length > 2) return null;
             let p = this._zimo.replace(/0/, '5');
 
-            for (let s of ['m', 'p', 's', 'z']) {
+            for (const s of suits) {
                 // 三人麻雀では萬子の2-8は使用しないためスキップ
                 if (s == 'm') {
                     // 萬子の1と9、および赤5のみ処理
@@ -433,3 +448,5 @@ module.exports = class Shoupai {
         return mianzi;
     }
 }
+
+export = Shoupai;
