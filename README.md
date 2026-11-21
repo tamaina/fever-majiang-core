@@ -8,7 +8,9 @@
 Fever 麻将由来のルールであり、北抜きを含む天鳳・雀魂の三麻ルールとの
 互換性はありません。既存の四人用まーじゃんコアの置き換えにも使えません。
 
-## インストール
+## インストール（公開後）
+
+TypeScript 移行中のため、このブランチからはまだ公開しません。
 
 ```sh
 npm install @aqz/fever-majiang-core
@@ -20,8 +22,10 @@ const { Game, Shan, Shoupai, Util, rule } = require('@aqz/fever-majiang-core');
 
 ## テスト
 
-- `npm test`: 三麻の回帰テスト。追加依存なしで実行できます。
-- `npm ci && npm run test:legacy`: 引き継いだテスト一式。四人用の局進行・牌山・
+- `npm ci && npm test`: TypeScript のビルド、型定義の利用テスト、三麻の回帰テスト。
+- `npm run typecheck`: 移行済み TypeScript ソースの厳密な型チェック。
+- 残存する JavaScript の宣言は暫定の推論結果です。全 API を型付けしたものではありません。
+- `npm ci && npm run build && npm run test:legacy`: 引き継いだテスト一式。四人用の局進行・牌山・
   点数などを期待するケースが残っており、三麻版では一部が失敗します。
 
 ## 提供機能

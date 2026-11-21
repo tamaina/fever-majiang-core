@@ -5,11 +5,14 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "node --test test/sanma-regression.cjs",
+    "test": "npm run build && npm run test:types && node --test test/sanma-regression.cjs",
     "test:legacy": "mocha -u tdd --extension js",
-    "test:legacy:cover": "nyc -r lcov -r text npm run test:legacy"
+    "test:legacy:cover": "nyc -r lcov -r text npm run test:legacy",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:types": "tsc --noEmit --strict --module Node16 --target ES2022 test/types-smoke.cts"
   },
   "repository": {
     "type": "git",
@@ -27,9 +30,12 @@
   "homepage": "https://github.com/tamaina/fever-majiang-core#readme",
   "devDependencies": {
     "mocha": "^11.7.1",
-    "nyc": "^17.1.0"
+    "nyc": "^17.1.0",
+    "typescript": "5.9.3"
   },
   "files": [
-    "lib"
-  ]
+    "dist"
+  ],
+  "private": true,
+  "types": "dist/index.d.ts"
 }

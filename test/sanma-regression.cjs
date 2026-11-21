@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { Shan, Shoupai, Util, rule } = require('../lib');
+const { Shan, Shoupai, Util, rule } = require('..');
 
 test('sanma manzu dora skips the absent ranks in both directions', () => {
     assert.equal(Shan.zhenbaopai('m1'), 'm9');
