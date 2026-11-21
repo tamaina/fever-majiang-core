@@ -1,8 +1,9 @@
 'use strict';
 
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { Shan, Shoupai, Util, rule } = require('..');
+import { test } from 'vitest';
+import assert from 'node:assert/strict';
+import Majiang from '../dist/index.js';
+const { Shan, Shoupai, Util, rule } = Majiang;
 
 test('sanma manzu dora skips the absent ranks in both directions', () => {
     assert.equal(Shan.zhenbaopai('m1'), 'm9');

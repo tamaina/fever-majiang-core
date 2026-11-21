@@ -7,7 +7,7 @@
   },
   "main": "dist/index.js",
   "scripts": {
-    "test": "npm run build && npm run test:types && node --test test/sanma-regression.cjs",
+    "test": "npm run build && npm run test:types && vitest run",
     "test:legacy": "mocha -u tdd --extension js",
     "test:legacy:cover": "nyc -r lcov -r text npm run test:legacy",
     "build": "tsc -p tsconfig.json",
@@ -31,7 +31,8 @@
   "devDependencies": {
     "mocha": "^11.7.1",
     "nyc": "^17.1.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "5.1.1"
   },
   "files": [
     "dist"
