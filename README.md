@@ -1,20 +1,28 @@
-# majiang-core
+# Fever Mahjong Core
 
-麻雀基本ライブラリ
+[ntanetani/fever-majiang-core](https://github.com/ntanetani/fever-majiang-core) の
+メンテナンス用フォークです。元の実装は
+[kobalab/majiang-core](https://github.com/kobalab/majiang-core)（Satoshi Kobayashi）です。
 
-手牌の操作、シャンテン数・和了点計算、局進行・卓情報の管理、思考ルーチンの雛形を含む基本クラス群を提供します。
-
-ver.2.0.0 以降の[電脳麻将](https://github.com/kobalab/Majiang)は、その実装に本パッケージを使用しています。
+三人用の牌山・局進行・和了点計算を提供する CommonJS ライブラリです。
+Fever 麻将由来のルールであり、北抜きを含む天鳳・雀魂の三麻ルールとの
+互換性はありません。既存の四人用まーじゃんコアの置き換えにも使えません。
 
 ## インストール
+
 ```sh
-$ npm i @kobalab/majiang-core
+npm install @aqz/fever-majiang-core
 ```
 
-## 使用法
-```javascript
-const Majiang = require('@kobalab/majiang-core');
+```js
+const { Game, Shan, Shoupai, Util, rule } = require('@aqz/fever-majiang-core');
 ```
+
+## テスト
+
+- `npm test`: 三麻の回帰テスト。追加依存なしで実行できます。
+- `npm ci && npm run test:legacy`: 引き継いだテスト一式。四人用の局進行・牌山・
+  点数などを期待するケースが残っており、三麻版では一部が失敗します。
 
 ## 提供機能
 | クラス名            | 機能                                 |

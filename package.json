@@ -1,18 +1,19 @@
 {
-  "name": "@kobalab/majiang-core",
-  "version": "1.3.4",
-  "description": "麻雀基本ライブラリ",
+  "name": "@aqz/fever-majiang-core",
+  "version": "0.1.0",
+  "description": "Fever Mahjong three-player game engine (fork of kobalab/majiang-core)",
   "publishConfig": {
     "access": "public"
   },
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha -u tdd",
-    "test:cover": "nyc -r lcov -r text npm test"
+    "test": "node --test test/sanma-regression.cjs",
+    "test:legacy": "mocha -u tdd --extension js",
+    "test:legacy:cover": "nyc -r lcov -r text npm run test:legacy"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kobalab/majiang-core.git"
+    "url": "git+https://github.com/tamaina/fever-majiang-core.git"
   },
   "keywords": [
     "麻雀",
@@ -21,11 +22,14 @@
   "author": "Satoshi Kobayashi",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kobalab/majiang-core/issues"
+    "url": "https://github.com/tamaina/fever-majiang-core/issues"
   },
-  "homepage": "https://github.com/kobalab/majiang-core#readme",
+  "homepage": "https://github.com/tamaina/fever-majiang-core#readme",
   "devDependencies": {
     "mocha": "^11.7.1",
     "nyc": "^17.1.0"
-  }
+  },
+  "files": [
+    "lib"
+  ]
 }
