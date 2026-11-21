@@ -25,14 +25,14 @@ class Shoupai {
 
         // 三人麻雀では萬子の2-8は使用しない
         const s = p[0], n = +p[1];
-        if (s === 'm' && n >= 2 && n <= 8) return null;
+        if (s === 'm' && n !== 1 && n !== 9) return null;
 
         return p;
     }
 
     static valid_mianzi(m: string): string | undefined {
 
-        if (m.match(/^z.*[089]/)) return;
+        if (m.match(/^z.*[089]/) || m[0] === "m" && /[02-8]/.test(m.slice(1))) return;
         let h = m.replace(/0/g, '5');
         if (h.match(/^[mpsz](\d)\1\1[\+\=\-]\1?$/)) {
             return m.replace(/([mps])05/, '$1' + '50');

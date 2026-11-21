@@ -19,7 +19,7 @@ type DrawResult = { name: string; shoupai: string[]; fenpei?: number[] | null };
 type End = { defen: number[] };
 
 class Shan {
-    paishu = 136 - 13 * 4 - 14;
+    paishu = 108 - 13 * 3 - 14;
     baopai: string[];
     fubaopai: string[] | null | undefined;
     constructor(baopai?: string | string[] | null) {
@@ -73,7 +73,7 @@ class Board {
         this.shan       = null;
         this.shoupai    = [];
         this.he         = [];
-        this.player_id  = [0,1,2,3];
+        this.player_id  = [0,1,2];
         this.lunban     = -1;
 
         this._lizhi = false;
@@ -84,7 +84,7 @@ class Board {
     }
 
     menfeng(id: number) {
-        return (id + 4 - this.qijia + 4 - this.jushu) % 4;
+        return (id + 6 - this.qijia - this.jushu) % 3;
     }
 
     qipai(qipai: Deal) {
@@ -93,11 +93,11 @@ class Board {
         this.changbang  = qipai.changbang;
         this.lizhibang  = qipai.lizhibang;
         this.shan       = new Shan(qipai.baopai);
-        for (let l = 0; l < 4; l++) {
+        for (let l = 0; l < 3; l++) {
             let paistr = qipai.shoupai[l] || '_'.repeat(13);
             this.shoupai[l] = Shoupai.fromString(paistr);
             this.he[l]      = new He();
-            this.player_id[l] = (this.qijia + this.jushu + l) % 4;
+            this.player_id[l] = (this.qijia + this.jushu + l) % 3;
             this.defen[this.player_id[l]] = qipai.defen[l];
         }
         this.lunban     = -1;
@@ -156,7 +156,7 @@ class Board {
         if (this._fenpei) {
             this.changbang = 0;
             this.lizhibang = 0;
-            for (let l = 0; l < 4; l++) {
+            for (let l = 0; l < 3; l++) {
                 this.defen[this.player_id[l]] += this._fenpei[l];
             }
         }
@@ -168,7 +168,7 @@ class Board {
 
     pingju(pingju: DrawResult) {
         if (! pingju.name.match(/^三家和/)) this.lizhi();
-        for (let l = 0; l < 4; l++) {
+        for (let l = 0; l < 3; l++) {
             if (pingju.shoupai[l])
                 this.shoupai[l].fromString(pingju.shoupai[l]);
         }
@@ -181,13 +181,13 @@ class Board {
         if (! this._fenpei) return;
         this.changbang = this._lianzhuang ? this._changbang + 1 : 0;
         this.lizhibang = this._lizhibang;
-        for (let l = 0; l < 4; l++) {
+        for (let l = 0; l < 3; l++) {
             this.defen[this.player_id[l]] += this._fenpei[l];
         }
     }
 
     jieju(paipu: End) {
-        for (let id = 0; id < 4; id++) {
+        for (let id = 0; id < 3; id++) {
             this.defen[id] = paipu.defen[id];
         }
         this.lunban = -1;
