@@ -4,8 +4,6 @@
     "module": "Node16",
     "rootDir": "lib",
     "outDir": "dist",
-    "allowJs": true,
-    "checkJs": false,
     "strict": true,
     "declaration": true,
     "noEmitOnError": true

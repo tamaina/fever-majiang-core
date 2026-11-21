@@ -533,7 +533,7 @@ class Game {
             menfeng: menfeng,
             hupai: {
                 lizhi: this._lizhi[menfeng],
-                yifa: this._yifa[menfeng],
+                yifa: Boolean(this._yifa[menfeng]),
                 qianggang: this._hule_option == 'qianggang',
                 lingshang: this._hule_option == 'lingshang',
                 haidi: model.shan.paishu > 0
@@ -1178,8 +1178,9 @@ class Game {
             rule: rule,
             zhuangfeng: zhuangfeng,
             menfeng: menfeng,
-            hupai: {},
+            hupai: { lizhi: 0, yifa: false, qianggang: false, lingshang: false, haidi: 0, tianhu: 0 },
             baopai: [],
+            fubaopai: null,
             jicun: { changbang: 0, lizhibang: 0 }
         };
         let hule = Majiang.Util.hule(shoupai, p, param);
