@@ -71,7 +71,7 @@ class Shoupai {
             }
             if (!Shoupai.valid_pai(p)) throw new Error(p);
             let s = tileSuit(p), n = +p[1];
-            if (this._bingpai[s][n] == 4) throw new Error([this, p].join(','));
+            if (this._bingpai[s][n || 5] >= 4) throw new Error([this, p].join(','));
             this._bingpai[s][n]++;
             if (s != 'z' && n == 0) this._bingpai[s][5]++;
         }
@@ -201,12 +201,9 @@ class Shoupai {
             if (!Shoupai.valid_pai(p)) throw new Error(p);
             let s = tileSuit(p), n = +p[1];
             let bingpai = this._bingpai[s];
-            if (bingpai[n] == 4) throw new Error([this, p].join(','));
+            if (bingpai[n || 5] >= 4) throw new Error([this, p].join(','));
             bingpai[n]++;
-            if (n == 0) {
-                if (bingpai[5] == 4) throw new Error([this, p].join(','));
-                bingpai[5]++;
-            }
+            if (n == 0) bingpai[5]++;
             this._zimo = s + n;
         }
         return this;

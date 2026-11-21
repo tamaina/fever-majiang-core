@@ -52,3 +52,12 @@ describe('three-seat board and discards', () => {
         expect(Shoupai.valid_mianzi('m555-')).toBeUndefined();
     });
 });
+
+test('red fives share the four-copy cap and a rejected draw preserves the hand', () => {
+    expect(() => new Shoupai(['p5', 'p5', 'p5', 'p5', 'p0'])).toThrow();
+    const hand = new Shoupai(['p5', 'p5', 'p5', 'p5']);
+    expect(() => hand.zimo('p0')).toThrow();
+    expect(hand.toString()).toBe('p5555');
+    expect(hand._bingpai.p[0]).toBe(0);
+    expect(new Shoupai(['p5', 'p5', 'p5']).zimo('p0').toString()).toBe('p555p0');
+});
