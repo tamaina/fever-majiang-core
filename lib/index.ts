@@ -1,5 +1,5 @@
 /*!
- *  @kobalab/majiang-core v1.3.4
+ *  Fever Mahjong Core, derived from @kobalab/majiang-core
  *
  *  Copyright(C) 2021 Satoshi Kobayashi
  *  Released under the MIT license
