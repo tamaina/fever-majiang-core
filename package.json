@@ -39,5 +39,22 @@
     "dist"
   ],
   "private": true,
-  "types": "dist/index.d.ts"
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./three-player": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./four-player": {
+      "types": "./dist/four-player.d.ts",
+      "default": "./dist/four-player.js"
+    }
+  },
+  "dependencies": {
+    "@kobalab/majiang-core": "1.4.1"
+  }
 }

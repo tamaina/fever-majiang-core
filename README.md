@@ -7,7 +7,7 @@
 三人用の牌山・局進行・和了点計算を提供する CommonJS ライブラリです。
 対局サーバーや通信層は含みません。
 Fever 麻将由来のルールであり、北抜きを含む天鳳・雀魂の三麻ルールとの
-互換性はありません。既存の四人用まーじゃんコアの置き換えにも使えません。
+互換性はありません。四人用は別入口から、既存の上流エンジンをそのまま使います。
 
 ## インストール（公開後）
 
@@ -18,8 +18,12 @@ npm install @aqz/fever-majiang-core
 ```
 
 ```js
-const { Game, Shan, Shoupai, Util, rule } = require('@aqz/fever-majiang-core');
+const threePlayer = require('@aqz/fever-majiang-core/three-player');
+const fourPlayer = require('@aqz/fever-majiang-core/four-player');
+// require('@aqz/fever-majiang-core') is the same as threePlayer.
 ```
+
+四麻入口は MIT の [@kobalab/majiang-core 1.4.1](https://github.com/kobalab/majiang-core/tree/7e964296dd8eb5ff5a32f8182acdc6a0c2a81cbb) に固定した薄いラッパーです。四麻のルールは変更せず、型宣言は検証した公開 API の一部を提供します。
 
 ## テスト
 
