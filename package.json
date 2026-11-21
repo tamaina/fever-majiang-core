@@ -10,9 +10,10 @@
     "test": "npm run build && npm run test:types && vitest run",
     "test:legacy": "mocha -u tdd --extension js",
     "test:legacy:cover": "nyc -r lcov -r text npm run test:legacy",
-    "build": "tsc -p tsconfig.json",
+    "build": "node -e \"require('node:fs').rmSync('dist',{ recursive: true, force: true })\" && tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test:types": "tsc --noEmit --strict --module Node16 --target ES2022 test/types-smoke.cts"
+    "test:types": "tsc --noEmit --strict --module Node16 --target ES2022 test/types-smoke.cts",
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
